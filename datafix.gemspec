@@ -3,7 +3,7 @@ require File.expand_path('../lib/datafix/version', __FILE__)
 
 Gem::Specification.new do |gem|
   gem.authors       = ["Case Commons, LLC"]
-  gem.email         = ["casecommons-dev@googlegroups.com"]
+  gem.email         = ['casecommons-dev@googlegroups.com', 'andrew@johnandrewmarshall.com']
   gem.description   = %q{Datafix provides a generator for documenting and testing database hotfixes}
   gem.summary       = %q{Datafix provides a generator for documenting and testing database hotfixes}
   gem.homepage      = "https://github.com/Casecommons/datafix"
