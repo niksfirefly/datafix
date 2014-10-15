@@ -49,9 +49,8 @@ end
 
 Rails.application.config.root = File.expand_path("../tmp_rails_app",__FILE__)
 
-
 RSpec.configure do |config|
-  config.color_enabled = true
+  config.color = true
   config.formatter     = 'documentation'
 
   config.before(:suite) do

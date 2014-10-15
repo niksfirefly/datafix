@@ -25,7 +25,7 @@ describe "datafix rake tasks" do
   describe "up" do
     it "runs the migration" do
       require Dir.glob(Rails.root.join("db/datafixes/*_#{fix_name}.rb")).first
-      Datafixes::FixKittens.should_receive(:up)
+      expect(Datafixes::FixKittens).to receive(:up)
       ENV['NAME'] = fix_name
       @rake["db:datafix:up"].invoke
     end
@@ -34,7 +34,7 @@ describe "datafix rake tasks" do
   describe "down" do
     it "runs the migration" do
       require Dir.glob(Rails.root.join("db/datafixes/*_#{fix_name}.rb")).first
-      Datafixes::FixKittens.should_receive(:down)
+      expect(Datafixes::FixKittens).to receive(:down)
       ENV['NAME'] = fix_name
       @rake["db:datafix:down"].invoke
     end

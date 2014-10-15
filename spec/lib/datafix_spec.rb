@@ -23,7 +23,7 @@ describe Datafix do
     kitten_names.each do |name|
       Kitten.create!(name: name)
     end
-    Kitten.where(fixed: true).should be_empty
+    expect(Kitten.where(fixed: true)).to be_empty
   end
 
   context "after running fix kittens up" do
@@ -31,19 +31,19 @@ describe Datafix do
       Datafixes::FixKittens.migrate('up')
     end
 
-    it "fixes all kittens should" do
-      Kitten.where(fixed: false).should be_empty
+    it "fixes all kittens" do
+      expect(Kitten.where(fixed: false)).to be_empty
     end
 
     it "creates a kittens archive table" do
-      Kitten.connection.table_exists?(archived_table_name).should be_true
-      Kitten.connection.select_value("SELECT COUNT(*) FROM #{archived_table_name}").to_i.should == kitten_names.size
+      expect(Kitten.connection.table_exists?(archived_table_name)).to eq true
+      expect(Kitten.connection.select_value("SELECT COUNT(*) FROM #{archived_table_name}").to_i).to eq kitten_names.size
     end
 
     it "updates the datafix log" do
       datafix_log = DatafixLog.last
-      datafix_log.direction.should == 'up'
-      datafix_log.script.should == 'FixKittens'
+      expect(datafix_log.direction).to eq 'up'
+      expect(datafix_log.script).to eq 'FixKittens'
     end
 
     context "after running fix kittens down" do
@@ -52,17 +52,17 @@ describe Datafix do
       end
 
       it "unfixes the kittens" do
-        Kitten.where(fixed: true).should be_empty
+        expect(Kitten.where(fixed: true)).to be_empty
       end
 
       it "removes the kittens archive table" do
-        Kitten.connection.table_exists?("archived_kittens").should be_false
+        expect(Kitten.connection.table_exists?("archived_kittens")).to eq false
       end
 
       it "updates the datafix log" do
         datafix_log = DatafixLog.last
-        datafix_log.direction.should == 'down'
-        datafix_log.script.should == 'FixKittens'
+        expect(datafix_log.direction).to eq 'down'
+        expect(datafix_log.script).to eq 'FixKittens'
       end
     end
   end
