@@ -30,9 +30,17 @@ ActiveRecord::Migration.create_table :datafix_log do |t|
   t.timestamp :timestamp
 end
 
+ActiveRecord::Migration.create_table :datafix_statuses do |t|
+  t.string :script
+  t.string :direction
+  t.timestamps null: false
+end
+
 class DatafixLog < ActiveRecord::Base
   self.table_name = "datafix_log"
 end
+
+class DatafixStatus < ActiveRecord::Base; end
 
 ActiveRecord::Migration.create_table :kittens do |t|
   t.string :name
@@ -41,6 +49,16 @@ ActiveRecord::Migration.create_table :kittens do |t|
 end
 
 class Kitten < ActiveRecord::Base; end
+
+ActiveRecord::Migration.create_table :puppies do |t|
+  t.string :name
+  t.boolean :fixed, default: false
+  t.timestamps
+end
+
+class Puppy < ActiveRecord::Base; end
+
+Dir.glob("spec/datafixes/*.rb").each do |f| require "datafixes/#{File.basename f}" end
 
 require "action_controller/railtie"
 class TestRailsApp < Rails::Application

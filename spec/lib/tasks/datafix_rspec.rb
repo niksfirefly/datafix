@@ -4,7 +4,12 @@ require "rails/generators"
 require "generators/datafix/datafix_generator"
 
 describe "datafix rake tasks" do
-  let(:fix_name) { "fix_kittens" }
+  let(:datafix1) { "fix_kittens" }
+  let(:datafix2) { "fix_puppies" }
+
+  def create_fix(fix_name)
+    Rails::Generators.invoke("datafix", [fix_name])
+  end
 
   before(:all) do
     @rake = Rake::Application.new
@@ -14,7 +19,7 @@ describe "datafix rake tasks" do
 
     @old_path = Dir.pwd
     Dir.chdir(Rails.root)
-    Rails::Generators.invoke("datafix", [fix_name])
+    create_fix("fix_kittens")
   end
 
   after(:all) do
@@ -22,20 +27,45 @@ describe "datafix rake tasks" do
     @old_path = nil
   end
 
+  describe "datafix" do
+    before do
+      create_fix(datafix2)
+      Dir.glob(Rails.root.join("db/datafixes/*.rb")).each do |path|
+        require path
+      end
+    end
+
+    it "runs the up migration for all datafixes" do
+      expect(Datafixes::FixKittens).to receive(:up)
+      expect(Datafixes::FixPuppies).to receive(:up)
+      @rake["db:datafix"].invoke
+    end
+
+    context "when one has already been run" do
+      before { Datafixes::FixKittens.migrate('up') }
+
+      it "should only run ones that aren't up" do
+        expect(Datafixes::FixKittens).to_not receive(:up)
+        expect(Datafixes::FixPuppies).to receive(:up)
+        @rake["db:datafix"].invoke
+      end
+    end
+  end
+
   describe "up" do
     it "runs the migration" do
-      require Dir.glob(Rails.root.join("db/datafixes/*_#{fix_name}.rb")).first
+      require Dir.glob(Rails.root.join("db/datafixes/*_#{datafix1}.rb")).first
       expect(Datafixes::FixKittens).to receive(:up)
-      ENV['NAME'] = fix_name
+      ENV['NAME'] = datafix1
       @rake["db:datafix:up"].invoke
     end
   end
 
   describe "down" do
     it "runs the migration" do
-      require Dir.glob(Rails.root.join("db/datafixes/*_#{fix_name}.rb")).first
+      require Dir.glob(Rails.root.join("db/datafixes/*_#{datafix1}.rb")).first
       expect(Datafixes::FixKittens).to receive(:down)
-      ENV['NAME'] = fix_name
+      ENV['NAME'] = datafix1
       @rake["db:datafix:down"].invoke
     end
   end

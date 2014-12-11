@@ -12,24 +12,53 @@ class Datafix
       ActiveRecord::Base.transaction do
         send(direction.to_sym)
         log_run(direction)
+        log_status(direction)
       end
+    end
+
+    def up?
+      response = execute("SELECT * FROM datafix_statuses WHERE script = #{quote script_name}");
+      response.first && response.first["direction"] == "up"
     end
 
     private
 
     def log_run(direction)
-      name = self.name.camelize.split('::').tap(&:shift).join('::')
-      puts "migrating #{name} #{direction}"
+      puts "migrating #{script_name} #{direction}"
 
       execute(<<-SQL)
       INSERT INTO datafix_log
       (direction, script, timestamp)
-      VALUES ('#{direction}', '#{name.camelize}', NOW())
+      VALUES ('#{direction}', '#{script_name}', NOW())
       SQL
+    end
+
+    def log_status(direction)
+      response = execute("SELECT * FROM datafix_statuses WHERE script = #{quote script_name}");
+      if(response.count > 0)
+        execute(<<-SQL)
+        UPDATE datafix_statuses
+        SET direction = #{quote direction}, updated_at = NOW()
+        WHERE script = #{quote script_name}
+        SQL
+      else
+        execute(<<-SQL)
+        INSERT INTO datafix_statuses (direction, script, updated_at, created_at)
+        VALUES (#{quote direction}, #{quote script_name}, NOW(), NOW())
+        SQL
+      end
+    end
+
+    def script_name
+      @script_name ||= self.name.camelize.split('::').tap(&:shift).join('::').camelize
     end
 
     def connection
       @connection ||= ActiveRecord::Base.connection
+    end
+
+    def quote(value)
+      connection.quote(value)
     end
 
     def execute(*args)

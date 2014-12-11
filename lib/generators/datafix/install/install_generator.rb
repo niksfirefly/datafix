@@ -11,13 +11,21 @@ class Datafix
       source_root File.expand_path("../templates", __FILE__)
 
       def generate
+        generate_from_template("create_datafix_log")
+        generate_from_template("create_datafix_statuses")
+        generate_from_template("update_datafix_statuses")
+      end
+
+      private
+
+      def generate_from_template(migration_name)
         migration_dir = "db/migrate"
-        migration_name = "create_datafix_log"
+
         if ActiveRecord::Generators::Base.migration_exists?(migration_dir, migration_name)
-          raise "Another migration is already named #{migration_name}: #{migration_dir}"
+          puts "** Another migration is already named #{migration_name}: #{migration_dir}! Skipping."
         else
           migration_number = ActiveRecord::Generators::Base.next_migration_number(migration_dir)
-          copy_file "migration.rb", "#{migration_dir}/#{migration_number}_#{migration_name}.rb"
+          copy_file "#{migration_name}.rb", "#{migration_dir}/#{migration_number}_#{migration_name}.rb"
         end
       end
     end

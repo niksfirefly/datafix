@@ -1,18 +1,5 @@
 require "spec_helper"
 
-class Datafixes::FixKittens < Datafix
-  def self.up
-    table_name = Kitten.table_name
-    archive_table(table_name)
-    execute %Q{ UPDATE #{table_name} SET fixed = 't'; }
-  end
-
-  def self.down
-    table_name = Kitten.table_name
-    revert_archive_table(table_name)
-  end
-end
-
 describe Datafix do
 
   let(:kitten_names) { %w[nyan hobbes stimpy tigger garfield] }
@@ -46,6 +33,16 @@ describe Datafix do
       expect(datafix_log.script).to eq 'FixKittens'
     end
 
+    it "updates its datafix status" do
+      datafix_status = DatafixStatus.last
+      expect(datafix_status.direction).to eq 'up'
+      expect(datafix_status.script).to eq 'FixKittens'
+    end
+
+    it "return true for up?" do
+      expect(Datafixes::FixKittens.up?).to be_truthy
+    end
+
     context "after running fix kittens down" do
       before do
         Datafixes::FixKittens.migrate('down')
@@ -63,6 +60,17 @@ describe Datafix do
         datafix_log = DatafixLog.last
         expect(datafix_log.direction).to eq 'down'
         expect(datafix_log.script).to eq 'FixKittens'
+      end
+
+      it "updates its datafix status" do
+        expect(DatafixStatus.count).to eq 1
+        datafix_status = DatafixStatus.first
+        expect(datafix_status.direction).to eq 'down'
+        expect(datafix_status.script).to eq 'FixKittens'
+      end
+
+      it "return false for up?" do
+        expect(Datafixes::FixKittens.up?).to be_falsy
       end
     end
   end
