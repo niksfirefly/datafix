@@ -1,8 +1,6 @@
 class UpdateDatafixStatuses < ActiveRecord::Migration
   class DatafixStatus < ActiveRecord::Base; end
-  class DatafixLog < ActiveRecord::Base
-    self.table_name = "datafix_log" # If table was plural, this wouldn't be needed
-  end
+  class DatafixLog < ActiveRecord::Base; end
 
   def self.up
     DatafixLog.select(:script).uniq.map(&:script).each do |script|

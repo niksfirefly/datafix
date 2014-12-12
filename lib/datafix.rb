@@ -27,7 +27,7 @@ class Datafix
       puts "migrating #{script_name} #{direction}"
 
       execute(<<-SQL)
-      INSERT INTO datafix_log
+      INSERT INTO datafix_logs
       (direction, script, timestamp)
       VALUES ('#{direction}', '#{script_name}', NOW())
       SQL

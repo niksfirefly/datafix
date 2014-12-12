@@ -14,6 +14,7 @@ class Datafix
         generate_from_template("create_datafix_log")
         generate_from_template("create_datafix_statuses")
         generate_from_template("update_datafix_statuses")
+        generate_from_template("rename_datafix_log_to_datafix_logs")
       end
 
       private

@@ -13,7 +13,7 @@ describe "Datafix Migrations" do
     before do
       # Seed log with events but leave statuses empty.
       DatafixLog.connection.execute(<<-SQL)
-      INSERT INTO datafix_log (direction, script, timestamp)
+      INSERT INTO datafix_logs (direction, script, timestamp)
       VALUES
       ('up', 'uniquescript', #{sanitize timestamp}),
       ('down', 'uniquescript', #{sanitize timestamp}),
