@@ -25,6 +25,19 @@ namespace :db do
       require path_from_name(name)
       klass_from_name(name).migrate('down')
     end
+
+    desc "Show the statuses of all datafixes"
+    task :status => :environment do
+      puts "\ndatabase: #{ActiveRecord::Base.connection_config[:database]}\n\n"
+      puts "#{'Status'.center(8)}  #{'Last Run'.ljust(24)}  Datafix Name"
+      puts "-" * 60
+
+      class DatafixStatus < ActiveRecord::Base; end
+      DatafixStatus.order(:updated_at).each do |status|
+        puts "#{status.direction.center(8)} #{status.updated_at.to_s.ljust(24)} #{status.script}"
+      end
+      puts
+    end
   end
 
   private
