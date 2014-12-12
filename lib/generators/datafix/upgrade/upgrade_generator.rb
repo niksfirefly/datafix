@@ -2,7 +2,7 @@ require 'rails/generators/active_record'
 
 class Datafix
   module Generators
-    class InstallGenerator < Rails::Generators::Base
+    class UpgradeGenerator < Rails::Generators::Base
       include Rails::Generators::Migration
       extend ActiveRecord::Generators::Migration
 
@@ -11,7 +11,9 @@ class Datafix
       source_root File.expand_path("../templates", __FILE__)
 
       def generate
-        generate_from_template("create_datafix_tables")
+        generate_from_template("create_datafix_statuses")
+        generate_from_template("update_datafix_statuses")
+        generate_from_template("rename_datafix_log_to_datafix_logs")
       end
 
       private
@@ -20,7 +22,7 @@ class Datafix
         migration_dir = "db/migrate"
 
         if ActiveRecord::Generators::Base.migration_exists?(migration_dir, migration_name)
-          raise "Another migration is already named #{migration_name}: #{migration_dir}"
+          puts "** Another migration is already named #{migration_name}: #{migration_dir}! Skipping."
         else
           migration_number = ActiveRecord::Generators::Base.next_migration_number(migration_dir)
           copy_file "#{migration_name}.rb", "#{migration_dir}/#{migration_number}_#{migration_name}.rb"
@@ -29,3 +31,4 @@ class Datafix
     end
   end
 end
+

@@ -36,6 +36,8 @@ ActiveRecord::Migration.create_table :datafix_statuses do |t|
   t.timestamps null: false
 end
 
+ActiveRecord::Migration.add_index :datafix_statuses, :script, unique: true
+
 class DatafixLog < ActiveRecord::Base; end
 class DatafixStatus < ActiveRecord::Base; end
 

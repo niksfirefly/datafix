@@ -1,5 +1,5 @@
 require "spec_helper"
-require 'generators/datafix/install/templates/update_datafix_statuses'
+require 'generators/datafix/upgrade/templates/update_datafix_statuses'
 
 describe "Datafix Migrations" do
   def sanitize(value)
