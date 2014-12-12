@@ -24,6 +24,9 @@ ActiveRecord::Base.connection.drop_database PG_SPEC[:database] rescue nil
 ActiveRecord::Base.connection.create_database(PG_SPEC[:database])
 ActiveRecord::Base.establish_connection(PG_SPEC)
 
+require 'generators/datafix/install/templates/create_datafix_tables'
+CreateDatafixTables.new.up
+
 class DatafixLog < ActiveRecord::Base; end
 class DatafixStatus < ActiveRecord::Base; end
 

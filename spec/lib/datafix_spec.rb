@@ -1,11 +1,6 @@
 require "spec_helper"
-require 'generators/datafix/install/templates/create_datafix_tables'
 
 describe Datafix do
-  before(:all) do
-    CreateDatafixTables.new.up
-  end
-
   let(:kitten_names) { %w[nyan hobbes stimpy tigger garfield] }
   let(:table_name) { Kitten.table_name }
   let(:archived_table_name) { "archived_#{table_name}" }

@@ -20,6 +20,7 @@ describe "datafix rake tasks" do
     @old_path = Dir.pwd
     Dir.chdir(Rails.root)
     create_fix("fix_kittens")
+    create_fix("fix_puppies")
   end
 
   after(:all) do
@@ -29,7 +30,6 @@ describe "datafix rake tasks" do
 
   describe "datafix" do
     before do
-      create_fix(datafix2)
       Dir.glob(Rails.root.join("db/datafixes/*.rb")).each do |path|
         require path
       end
