@@ -4,9 +4,15 @@ namespace :db do
     if ENV['NAME'].present?
       Rake::Task["db:datafix:up"].invoke
     else
-      Dir.glob(Rails.root.join("db/datafixes/*.rb")).grep(/^\d+/).each do |path|
-        require path
-        klass_from_name(File.basename(path)).migrate('up')
+      class DatafixStatus < ActiveRecord::Base; end
+
+      Dir.glob(Rails.root.join("db/datafixes/*.rb")).each do |path|
+        script = script_from_name(File.basename(path))
+
+        if DatafixStatus.where(script: script, direction: "up").blank?
+          require path
+          klass_from_name(File.basename(path)).migrate('up')
+        end
       end
     end
   end
@@ -46,9 +52,12 @@ namespace :db do
 
   private
 
+  def script_from_name(name)
+    name.split(File::SEPARATOR).last.gsub(/^\d+_/, '').gsub(/.rb$/, '').camelize
+  end
+
   def klass_from_name(name)
-    name = name.split(File::SEPARATOR).last.gsub(/^\d+_/, '').gsub(/.rb$/, '').camelize
-    "Datafixes::#{name}".constantize
+    "Datafixes::#{script_from_name(name)}".constantize
   end
 
   def path_from_name(name)
