@@ -1,6 +1,6 @@
 # Datafix
 
-Datafix provides a template generator for documenting and testing database hotfixes
+Datafix provides a template generator for documenting and testing database hotfixes and data migrations.
 
 ## Installation
 
@@ -12,6 +12,14 @@ And then execute:
 
     $ bundle
     $ rails g datafix:install
+    $ rake db:migrate
+
+## Upgrade from previous installation of datafix
+
+Execute:
+
+    $ bundle
+    $ rails g datafix:upgrade
     $ rake db:migrate
 
 ## Usage
@@ -30,6 +38,10 @@ and
 
 To run it, execute:
 
+    rake db:datafix
+
+To run a specific datafix, execute:
+
     rake db:datafix[:up] NAME=my_groovy_name
 
 or
@@ -43,6 +55,10 @@ run the down with:
 To run the spec, execute:
 
     rspec spec/db/datafixes/YYYYMMDDhhmmss_my_groovy_name_spec.rb
+
+To see the status of your datafixes, execute:
+
+    rake db:datafix:status
 
 ## Contributing
 
