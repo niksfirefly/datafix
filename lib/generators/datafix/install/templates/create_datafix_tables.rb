@@ -7,12 +7,10 @@ class CreateDatafixTables < ActiveRecord::Migration
     end
 
     create_table :datafix_statuses do |t|
-      t.string :script
-      t.string :direction
-      t.timestamps null: false
+      t.string :version
     end
 
-    add_index :datafix_statuses, :script, unique: true
+    add_index :datafix_statuses, :version, unique: true
   end
 
   def self.down

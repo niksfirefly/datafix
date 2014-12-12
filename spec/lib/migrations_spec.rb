@@ -27,9 +27,9 @@ describe "Datafix Migrations" do
       DatafixLog.connection.execute(<<-SQL)
       INSERT INTO datafix_log (direction, script, timestamp)
       VALUES
-      ('up', 'uniquescript', #{sanitize timestamp}),
-      ('down', 'uniquescript', #{sanitize timestamp}),
-      ('up', 'uniquescript', #{sanitize timestamp}),
+      ('up', 'FixKittens', #{sanitize timestamp}),
+      ('down', 'FixKittens', #{sanitize timestamp}),
+      ('up', 'FixKittens', #{sanitize timestamp}),
       ('up', 'garbage', #{sanitize timestamp}),
       ('down', 'garbage', #{sanitize timestamp})
       SQL
@@ -37,17 +37,7 @@ describe "Datafix Migrations" do
 
     it "should have the correct datafix statuses" do
       migration.up
-      expect(DatafixStatus.count).to eq 2
-
-      unique = DatafixStatus.find_by(script: 'uniquescript')
-      expect(unique.direction).to eq 'up'
-      expect(unique.script).to eq 'uniquescript'
-      expect(unique.updated_at).to eq timestamp
-
-      garbage = DatafixStatus.find_by(script: 'garbage')
-      expect(garbage.direction).to eq 'down'
-      expect(garbage.script).to eq 'garbage'
-      expect(garbage.updated_at).to eq timestamp
+      expect(Datafix::DatafixStatus.find_by(version: '1')).to be
     end
   end
 end

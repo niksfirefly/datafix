@@ -1,26 +1,29 @@
 class UpgradeDatafixTables < ActiveRecord::Migration
-  class DatafixLog < ActiveRecord::Base; end
-  class DatafixStatus < ActiveRecord::Base; end
-
   def self.up
     create_table :datafix_statuses do |t|
-      t.string :script
-      t.string :direction
-      t.timestamps null: false
+      t.string :version
     end
 
-    add_index :datafix_statuses, :script, unique: true
+    add_index :datafix_statuses, :version, unique: true
     rename_table :datafix_log, :datafix_logs
 
-    DatafixLog.select(:script).uniq.map(&:script).each do |script|
-      log_entry = DatafixLog.where(script: script).order('timestamp DESC, id DESC').first
-      DatafixStatus.create!(script: script, direction: log_entry.direction, updated_at: log_entry.timestamp)
+    datafixes = ActiveRecord::Migrator.migrations(Rails.root.join("db", "datafixes"))
+    datafixes.each_slice(1000) do |batch|
+      execute("INSERT INTO datafix_statuses (version) VALUES #{to_sql(batch)}")
     end
   end
 
   def self.down
     drop_table :datafix_statuses
     rename_table :datafix_logs, :datafix_log
+  end
+
+  private
+
+  def to_sql(datafixes)
+    datafixes.map do |datafix|
+      "(#{datafix.version})"
+    end.join(",")
   end
 end
 

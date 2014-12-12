@@ -19,8 +19,10 @@ describe "datafix rake tasks" do
 
     @old_path = Dir.pwd
     Dir.chdir(Rails.root)
-    create_fix("fix_generated_salmons")
-    create_fix("fix_generated_tuna")
+
+    # Need to alter time so generator creates a different timestamp for the file.
+    Timecop.freeze(1.hour.ago) { create_fix("fix_generated_salmons") }
+    Timecop.freeze(1.minute.ago) { create_fix("fix_generated_tuna") }
 
     Dir.glob(Rails.root.join("db/datafixes/*.rb")).each do |path|
       require path
@@ -28,7 +30,7 @@ describe "datafix rake tasks" do
   end
 
   after(:each) do
-    DatafixStatus.delete_all
+    Datafix::DatafixStatus.delete_all
     Rake::Task["db:datafix"].reenable
     Rake::Task["db:datafix:up"].reenable
     Rake::Task["db:datafix:down"].reenable

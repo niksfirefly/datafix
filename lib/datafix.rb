@@ -1,64 +1,25 @@
 require "datafixes"
 require "datafix/version"
+require "datafix/datafix_status"
+require "datafix/datafix_status_presenter"
 require "datafix/railtie" if defined?(Rails)
 
 class Datafix
+  DIRECTIONS = %w[up down]
+
   class << self
-    DIRECTIONS = %w[up down]
-
     def migrate(direction)
-      raise ArgumentError unless DIRECTIONS.include?(direction)
-
-      ActiveRecord::Base.transaction do
-        send(direction.to_sym)
-        log_run(direction)
-        log_status(direction)
-      end
+      new.migrate(direction)
     end
 
     def up?
-      response = execute("SELECT * FROM datafix_statuses WHERE script = #{quote script_name}");
-      response.first && response.first["direction"] == "up"
+      new.up?
     end
 
     private
 
-    def log_run(direction)
-      puts "migrating #{script_name} #{direction}"
-
-      execute(<<-SQL)
-      INSERT INTO datafix_logs
-      (direction, script, timestamp)
-      VALUES ('#{direction}', '#{script_name}', NOW())
-      SQL
-    end
-
-    def log_status(direction)
-      response = execute("SELECT * FROM datafix_statuses WHERE script = #{quote script_name}");
-      if(response.count > 0)
-        execute(<<-SQL)
-        UPDATE datafix_statuses
-        SET direction = #{quote direction}, updated_at = NOW()
-        WHERE script = #{quote script_name}
-        SQL
-      else
-        execute(<<-SQL)
-        INSERT INTO datafix_statuses (direction, script, updated_at, created_at)
-        VALUES (#{quote direction}, #{quote script_name}, NOW(), NOW())
-        SQL
-      end
-    end
-
-    def script_name
-      @script_name ||= self.name.camelize.split('::').tap(&:shift).join('::').camelize
-    end
-
     def connection
       @connection ||= ActiveRecord::Base.connection
-    end
-
-    def quote(value)
-      connection.quote(value)
     end
 
     def execute(*args)
@@ -81,5 +42,70 @@ class Datafix
       execute "INSERT INTO #{table_name} SELECT * FROM archived_#{table_name}"
       execute "DROP TABLE archived_#{table_name}"
     end
+  end
+
+  attr_reader :name, :script_name
+  def initialize(name=self.class.name, version=nil)
+    @name = name
+    @script_name = name.camelize.demodulize
+    @passed_version = version
+  end
+
+  def version
+    @version ||= @passed_version || fetch_version
+  end
+
+  def migrate(direction)
+    raise ArgumentError unless DIRECTIONS.include?(direction)
+
+    ActiveRecord::Base.transaction do
+      self.class.public_send(direction.to_sym)
+      log_run(direction)
+      log_status(direction)
+    end
+  end
+
+  def up?
+    response = execute("SELECT * FROM datafix_statuses WHERE version = '#{version}'");
+    response.first.present?
+  end
+
+  def down?
+    !up?
+  end
+
+  private
+
+  def fetch_version
+    migrations = ActiveRecord::Migrator.migrations(Rails.root.join("db", "datafixes"))
+    migrations.detect do |migration|
+      migration.basename.include? script_name.underscore
+    end.try(:version)
+  end
+
+  def log_run(direction)
+    puts "migrating #{script_name} #{direction}"
+
+    execute(<<-SQL)
+    INSERT INTO datafix_logs
+    (direction, script, timestamp)
+    VALUES ('#{direction}', '#{script_name}', NOW())
+    SQL
+  end
+
+  def log_status(direction)
+    if(direction == 'down')
+      DatafixStatus.where(version: version.to_s).delete_all
+    elsif(down? && direction == 'up')
+      DatafixStatus.create(version: version.to_s)
+    end
+  end
+
+  def connection
+    @connection ||= ActiveRecord::Base.connection
+  end
+
+  def execute(*args)
+    connection.execute(*args)
   end
 end

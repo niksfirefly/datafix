@@ -4,6 +4,7 @@ require 'bundler/setup'
 require 'active_record'
 require 'database_cleaner'
 require 'pry'
+require 'timecop'
 
 require 'pg'
 require 'datafix'
@@ -28,7 +29,6 @@ require 'generators/datafix/install/templates/create_datafix_tables'
 CreateDatafixTables.new.up
 
 class DatafixLog < ActiveRecord::Base; end
-class DatafixStatus < ActiveRecord::Base; end
 
 ActiveRecord::Migration.create_table :kittens do |t|
   t.string :name
@@ -46,8 +46,6 @@ end
 
 class Puppy < ActiveRecord::Base; end
 
-Dir.glob("spec/datafixes/*.rb").each do |f| require "datafixes/#{File.basename f}" end
-
 require "action_controller/railtie"
 class TestRailsApp < Rails::Application
   config.secret_token = "random_secret_token"
@@ -62,6 +60,13 @@ RSpec.configure do |config|
   config.before(:suite) do
     FileUtils.rm_rf(Rails.root)
     Dir.mkdir(Rails.root)
+
+    FileUtils.mkdir_p(Rails.root.join("db", "datafixes"))
+    Dir.glob("spec/datafixes/*.rb").each do |f|
+      FileUtils.copy(f, Rails.root.join("db", "datafixes"))
+      require Rails.root.join("db", "datafixes", File.basename(f))
+    end
+
     TestRailsApp.initialize!
     DatabaseCleaner.strategy = :transaction
   end
@@ -72,6 +77,7 @@ RSpec.configure do |config|
 
   config.after(:each) do
     DatabaseCleaner.clean
+    Timecop.return
   end
 
   config.after(:suite) do

@@ -4,14 +4,10 @@ namespace :db do
     if ENV['NAME'].present?
       Rake::Task["db:datafix:up"].invoke
     else
-      class DatafixStatus < ActiveRecord::Base; end
-
-      Dir.glob(Rails.root.join("db/datafixes/*.rb")).each do |path|
-        script = script_from_name(File.basename(path))
-
-        if DatafixStatus.where(script: script, direction: "up").blank?
-          require path
-          klass_from_name(File.basename(path)).migrate('up')
+      migrations.each do |migration|
+        if !Datafix::DatafixStatus.where(version: migration.version.to_s).any?
+          require migration.filename
+          klass_from_name(File.basename(migration.filename)).migrate('up')
         end
       end
     end
@@ -38,19 +34,20 @@ namespace :db do
 
     desc "Show the statuses of all datafixes"
     task :status => :environment do
-      puts "\ndatabase: #{ActiveRecord::Base.connection_config[:database]}\n\n"
-      puts "#{'Status'.center(8)}  #{'Last Run'.ljust(24)}  Datafix Name"
-      puts "-" * 60
-
-      class DatafixStatus < ActiveRecord::Base; end
-      DatafixStatus.order(:updated_at).each do |status|
-        puts "#{status.direction.center(8)} #{status.updated_at.to_s.ljust(24)} #{status.script}"
+      puts Datafix::DatafixStatusPresenter.table_header
+      migrations.each do |migration|
+        presenter = Datafix::DatafixStatusPresenter.from_migration(migration)
+        puts presenter.to_table_s
       end
       puts
     end
   end
 
   private
+
+  def migrations
+    ActiveRecord::Migrator.migrations(Rails.root.join("db", "datafixes"))
+  end
 
   def script_from_name(name)
     name.split(File::SEPARATOR).last.gsub(/^\d+_/, '').gsub(/.rb$/, '').camelize
