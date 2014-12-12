@@ -1,9 +1,13 @@
 namespace :db do
   desc "Run the 'up' on all unrun datafixes"
   task :datafix => :environment do
-    Dir.glob(Rails.root.join("db/datafixes/*.rb")).grep(/^\d+/).each do |path|
-      require path
-      klass_from_name(File.basename(path)).migrate('up')
+    if ENV['NAME'].present?
+      Rake::Task["db:datafix:up"].invoke
+    else
+      Dir.glob(Rails.root.join("db/datafixes/*.rb")).grep(/^\d+/).each do |path|
+        require path
+        klass_from_name(File.basename(path)).migrate('up')
+      end
     end
   end
 
