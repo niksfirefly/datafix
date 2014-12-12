@@ -1,19 +1,31 @@
 require "spec_helper"
-require 'generators/datafix/upgrade/templates/update_datafix_statuses'
+require 'generators/datafix/upgrade/templates/upgrade_datafix_tables'
 
 describe "Datafix Migrations" do
+  before(:each) do
+    ActiveRecord::Migration.drop_table :datafix_logs
+    ActiveRecord::Migration.drop_table :datafix_statuses
+
+    # Intentionally datafix_log (no s) because of old migration
+    ActiveRecord::Migration.create_table :datafix_log do |t|
+      t.string :direction
+      t.string :script
+      t.timestamp :timestamp
+    end
+  end
+
   def sanitize(value)
     ActiveRecord::Base.connection.quote(value)
   end
 
   describe "migrating from previous Datafix installation" do
-    let(:migration) { UpdateDatafixStatuses.new }
+    let(:migration) { UpgradeDatafixTables.new }
     let(:timestamp) { '2014-10-05 05:00' }
 
     before do
       # Seed log with events but leave statuses empty.
       DatafixLog.connection.execute(<<-SQL)
-      INSERT INTO datafix_logs (direction, script, timestamp)
+      INSERT INTO datafix_log (direction, script, timestamp)
       VALUES
       ('up', 'uniquescript', #{sanitize timestamp}),
       ('down', 'uniquescript', #{sanitize timestamp}),
@@ -24,10 +36,8 @@ describe "Datafix Migrations" do
     end
 
     it "should have the correct datafix statuses" do
-      expect(DatafixStatus.count).to eq 0
-      expect {
-        migration.up
-      }.to change { DatafixStatus.count }.by 2
+      migration.up
+      expect(DatafixStatus.count).to eq 2
 
       unique = DatafixStatus.find_by(script: 'uniquescript')
       expect(unique.direction).to eq 'up'

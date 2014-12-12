@@ -24,20 +24,6 @@ ActiveRecord::Base.connection.drop_database PG_SPEC[:database] rescue nil
 ActiveRecord::Base.connection.create_database(PG_SPEC[:database])
 ActiveRecord::Base.establish_connection(PG_SPEC)
 
-ActiveRecord::Migration.create_table :datafix_logs do |t|
-  t.string :direction
-  t.string :script
-  t.timestamp :timestamp
-end
-
-ActiveRecord::Migration.create_table :datafix_statuses do |t|
-  t.string :script
-  t.string :direction
-  t.timestamps null: false
-end
-
-ActiveRecord::Migration.add_index :datafix_statuses, :script, unique: true
-
 class DatafixLog < ActiveRecord::Base; end
 class DatafixStatus < ActiveRecord::Base; end
 

@@ -11,9 +11,7 @@ class Datafix
       source_root File.expand_path("../templates", __FILE__)
 
       def generate
-        generate_from_template("create_datafix_statuses")
-        generate_from_template("update_datafix_statuses")
-        generate_from_template("rename_datafix_log_to_datafix_logs")
+        generate_from_template("upgrade_datafix_tables")
       end
 
       private
