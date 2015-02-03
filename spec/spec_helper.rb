@@ -6,7 +6,6 @@ require 'database_cleaner'
 require 'pry'
 require 'timecop'
 
-require 'pg'
 require 'datafix'
 
 PG_SPEC = {
